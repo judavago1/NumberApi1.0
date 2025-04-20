@@ -63,30 +63,34 @@ function mostrarSeccion(seccion) {
   };
   
   // Aquí puedes incluir las funciones para consultar números y otras acciones
-function consultarNumero() {
-  const numero = document.getElementById("numero").value;
-  const resultado = document.getElementById("resultado");
-
-  if (numero === "") {
-    resultado.innerHTML = `<div class="curiosidad">Por favor ingresa un número.</div>`;
-    return;
+  function consultarNumero() {
+    const numero = document.getElementById("numero").value;
+    const resultado = document.getElementById("resultado");
+  
+    if (numero === "") {
+      resultado.innerHTML = `<div class="curiosidad">Por favor ingresa un número.</div>`;
+      return;
+    }
+  
+    const url = `http://numbersapi.com/${numero}?json`;
+  
+    fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
+      .then(res => res.json())
+      .then(data => {
+        const parsed = JSON.parse(data.contents);
+        resultado.innerHTML = `
+          <div class="curiosidad">
+            ${parsed.text}
+            <br><br>
+            <button onclick="guardarFavorito('${parsed.text.replace(/'/g, "\\'")}')">Guardar en Favoritos</button>
+          </div>
+        `;
+      })
+      .catch(() => {
+        resultado.innerHTML = `<div class="curiosidad">Error al consultar la curiosidad.</div>`;
+      });
   }
-
-  fetch(`http://numbersapi.com/${numero}?json`)
-    .then(res => res.json())
-    .then(data => {
-      resultado.innerHTML = `
-        <div class="curiosidad">
-          ${data.text}
-          <br><br>
-          <button onclick="guardarFavorito('${data.text.replace(/'/g, "\\'")}')">Guardar en Favoritos</button>
-        </div>
-      `;
-    })
-    .catch(() => {
-      resultado.innerHTML = `<div class="curiosidad">Error al consultar la curiosidad.</div>`;
-    });
-}
+  
 
   
   function buscarCuriosidad() {
@@ -110,19 +114,20 @@ function consultarNumero() {
         ? `http://numbersapi.com/${numero}/date?json`
         : `http://numbersapi.com/${numero}/${tipo}?json`;
   
-      return fetch(url)
+      return fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
         .then(res => res.json())
-        .then(data => traducirTexto(data.text))
+        .then(data => traducirTexto(JSON.parse(data.contents).text))
         .catch(() => null);
-    }).filter(p => p !== null);
+    }).filter(Boolean);
   
     Promise.all(promesas).then(respuestas => {
-        const lista = respuestas.filter(Boolean).map(texto => `<div class="curiosidad">${texto}</div>`).join("");
+      const lista = respuestas.filter(Boolean).map(texto => `<div class="curiosidad">${texto}</div>`).join("");
       resultado.innerHTML = lista || "No se encontraron curiosidades.";
     }).catch(() => {
       resultado.innerHTML = "Error al obtener curiosidades.";
     });
   }
+  
   
   
   
@@ -249,8 +254,7 @@ function actualizarListaFavoritos() {
     .catch(() => textoOriginal); // Si falla, muestra el texto original
   }
   
-
-                        //LISTAAAAAAAAAAAAAAAAA
+  //                         MOSTRAR LISTA
   async function mostrarLista(id) {
     document.querySelectorAll("section").forEach(section => {
       section.style.display = "none";
@@ -263,31 +267,35 @@ function actualizarListaFavoritos() {
   
     let html = "";
   
-    const max = 30; // Puedes subir esto a 100 o más, pero se tarda más
+    const max = 30;
   
     for (let i = 0; i <= max; i++) {
       try {
-        // Trivia
-        const trivia = await fetch(`http://numbersapi.com/${i}/trivia?json`).then(res => res.json());
+        const triviaUrl = `http://numbersapi.com/${i}/trivia?json`;
+        const trivia = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(triviaUrl)}`)
+          .then(res => res.json()).then(data => JSON.parse(data.contents));
         html += `<div class="curiosidad"><strong>${i} - Trivia:</strong> ${trivia.text}</div>`;
   
-        // Math
-        const math = await fetch(`http://numbersapi.com/${i}/math?json`).then(res => res.json());
+        const mathUrl = `http://numbersapi.com/${i}/math?json`;
+        const math = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(mathUrl)}`)
+          .then(res => res.json()).then(data => JSON.parse(data.contents));
         html += `<div class="curiosidad"><strong>${i} - Matemática:</strong> ${math.text}</div>`;
   
-        // Year
-        const year = await fetch(`http://numbersapi.com/${i}/year?json`).then(res => res.json());
+        const yearUrl = `http://numbersapi.com/${i}/year?json`;
+        const year = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yearUrl)}`)
+          .then(res => res.json()).then(data => JSON.parse(data.contents));
         html += `<div class="curiosidad"><strong>Año ${i}:</strong> ${year.text}</div>`;
       } catch (e) {
         console.warn(`Error cargando curiosidades para el número ${i}:`, e);
       }
     }
   
-    // También mostramos curiosidades por fechas específicas
     const fechas = ["1/1", "2/14", "4/19", "12/25"];
     for (const fecha of fechas) {
       try {
-        const date = await fetch(`http://numbersapi.com/${fecha}/date?json`).then(res => res.json());
+        const dateUrl = `http://numbersapi.com/${fecha}/date?json`;
+        const date = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(dateUrl)}`)
+          .then(res => res.json()).then(data => JSON.parse(data.contents));
         html += `<div class="curiosidad"><strong>${fecha} - Fecha:</strong> ${date.text}</div>`;
       } catch (e) {
         console.warn(`Error con fecha ${fecha}:`, e);
